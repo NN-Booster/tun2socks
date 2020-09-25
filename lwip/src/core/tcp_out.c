@@ -931,12 +931,6 @@ tcp_output(struct tcp_pcb *pcb)
      return tcp_send_empty_ack(pcb);
   }
 
-  /* useg should point to last segment on unacked queue */
-  useg = pcb->unacked;
-  if (useg != NULL) {
-    for (; useg->next != NULL; useg = useg->next);
-  }
-
 #if TCP_OUTPUT_DEBUG
   if (seg == NULL) {
     LWIP_DEBUGF(TCP_OUTPUT_DEBUG, ("tcp_output: nothing to send (%p)\n",
@@ -1007,6 +1001,12 @@ tcp_output(struct tcp_pcb *pcb)
         /* In the case of fast retransmit, the packet should not go to the tail
          * of the unacked queue, but rather somewhere before it. We need to check for
          * this case. -STJ Jul 27, 2004 */
+
+        /* useg should point to last segment on unacked queue */
+        useg = pcb->unacked;
+        if (useg != NULL) {
+          for (; useg->next != NULL; useg = useg->next);
+        }
         u32_t seqno = seg->tcphdr->seqno;
         u32_t useqno = useg->tcphdr->seqno;
         if (TCP_SEQ_LT(ntohl(seqno), ntohl(useqno))) {
