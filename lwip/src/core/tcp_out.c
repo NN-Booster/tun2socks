@@ -1007,21 +1007,23 @@ tcp_output(struct tcp_pcb *pcb)
         if (useg != NULL) {
           for (; useg->next != NULL; useg = useg->next);
         }
-        u32_t seqno = seg->tcphdr->seqno;
-        u32_t useqno = useg->tcphdr->seqno;
-        if (TCP_SEQ_LT(ntohl(seqno), ntohl(useqno))) {
-          /* add segment to before tail of unacked list, keeping the list sorted */
-          struct tcp_seg **cur_seg = &(pcb->unacked);
-          while (*cur_seg &&
-            TCP_SEQ_LT(ntohl((*cur_seg)->tcphdr->seqno), ntohl(seg->tcphdr->seqno))) {
-              cur_seg = &((*cur_seg)->next );
+        if (useg != NULL) {
+          u32_t seqno = seg->tcphdr->seqno;
+          u32_t useqno = useg->tcphdr->seqno;
+          if (TCP_SEQ_LT(ntohl(seqno), ntohl(useqno))) {
+            /* add segment to before tail of unacked list, keeping the list sorted */
+            struct tcp_seg **cur_seg = &(pcb->unacked);
+            while (*cur_seg &&
+              TCP_SEQ_LT(ntohl((*cur_seg)->tcphdr->seqno), ntohl(seg->tcphdr->seqno))) {
+                cur_seg = &((*cur_seg)->next );
+            }
+            seg->next = (*cur_seg);
+            (*cur_seg) = seg;
+          } else {
+            /* add segment to tail of unacked list */
+            useg->next = seg;
+            useg = useg->next;
           }
-          seg->next = (*cur_seg);
-          (*cur_seg) = seg;
-        } else {
-          /* add segment to tail of unacked list */
-          useg->next = seg;
-          useg = useg->next;
         }
       }
     /* do not queue empty segments on the unacked list */
