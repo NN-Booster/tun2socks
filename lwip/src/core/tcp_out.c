@@ -1007,7 +1007,9 @@ tcp_output(struct tcp_pcb *pcb)
         /* In the case of fast retransmit, the packet should not go to the tail
          * of the unacked queue, but rather somewhere before it. We need to check for
          * this case. -STJ Jul 27, 2004 */
-        if (TCP_SEQ_LT(ntohl(seg->tcphdr->seqno), ntohl(useg->tcphdr->seqno))) {
+        u32_t seqno = seg->tcphdr->seqno;
+        u32_t useqno = useg->tcphdr->seqno;
+        if (TCP_SEQ_LT(ntohl(seqno), ntohl(useqno))) {
           /* add segment to before tail of unacked list, keeping the list sorted */
           struct tcp_seg **cur_seg = &(pcb->unacked);
           while (*cur_seg &&
