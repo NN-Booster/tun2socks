@@ -62,12 +62,7 @@
 /** flag for LWIP_DEBUGF to halt after printing this debug message */
 #define LWIP_DBG_HALT          0x08U
 
-#ifndef LWIP_NOASSERT
-#define LWIP_ASSERT(message, assertion) do { if(!(assertion)) \
-  LWIP_PLATFORM_ASSERT(message); } while(0)
-#else  /* LWIP_NOASSERT */
 #define LWIP_ASSERT(message, assertion) 
-#endif /* LWIP_NOASSERT */
 
 /** if "expression" isn't true, then print "message" and execute "handler" expression */
 #ifndef LWIP_ERROR
