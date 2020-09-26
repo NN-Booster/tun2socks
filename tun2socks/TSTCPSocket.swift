@@ -103,7 +103,7 @@ struct SocketDict {
  - note: Unless one of `socketDidReset(_:)`, `socketDidAbort(_:)` or `socketDidClose(_:)` delegation methods is called, please do `close()`the socket actively and wait for `socketDidClose(_:)` before releasing it.
  - note: This class is NOT thread-safe, make sure every method call is on the same dispatch queue as `TSIPStack`.
  */
-public final class TSTCPSocket {
+public final class TSTCPSocket: Hashable {
     fileprivate var pcb: UnsafeMutablePointer<tcp_pcb>?
     /// The source IPv4 address.
     public let sourceAddress: in_addr
@@ -113,6 +113,13 @@ public final class TSTCPSocket {
     public let sourcePort: UInt16
     /// The destination port.
     public let destinationPort: UInt16
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(sourceAddress)
+        hasher.combine(destinationAddress)
+        hasher.combine(sourcePort)
+        hasher.combine(destinationPort)
+    }
     
     fileprivate var identity: Int
     fileprivate let identityArg: UnsafeMutablePointer<Int>
