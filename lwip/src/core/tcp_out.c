@@ -931,12 +931,6 @@ tcp_output(struct tcp_pcb *pcb)
      return tcp_send_empty_ack(pcb);
   }
 
-  /* useg should point to last segment on unacked queue */
-  useg = pcb->unacked;
-  if (useg != NULL) {
-    for (; useg->next != NULL; useg = useg->next);
-  }
-
 #if TCP_OUTPUT_DEBUG
   if (seg == NULL) {
     LWIP_DEBUGF(TCP_OUTPUT_DEBUG, ("tcp_output: nothing to send (%p)\n",
@@ -1007,19 +1001,29 @@ tcp_output(struct tcp_pcb *pcb)
         /* In the case of fast retransmit, the packet should not go to the tail
          * of the unacked queue, but rather somewhere before it. We need to check for
          * this case. -STJ Jul 27, 2004 */
-        if (TCP_SEQ_LT(ntohl(seg->tcphdr->seqno), ntohl(useg->tcphdr->seqno))) {
-          /* add segment to before tail of unacked list, keeping the list sorted */
-          struct tcp_seg **cur_seg = &(pcb->unacked);
-          while (*cur_seg &&
-            TCP_SEQ_LT(ntohl((*cur_seg)->tcphdr->seqno), ntohl(seg->tcphdr->seqno))) {
-              cur_seg = &((*cur_seg)->next );
+
+        /* useg should point to last segment on unacked queue */
+        useg = pcb->unacked;
+        if (useg != NULL) {
+          for (; useg->next != NULL; useg = useg->next);
+        }
+        if (useg != NULL) {
+          u32_t seqno = seg->tcphdr->seqno;
+          u32_t useqno = useg->tcphdr->seqno;
+          if (TCP_SEQ_LT(ntohl(seqno), ntohl(useqno))) {
+            /* add segment to before tail of unacked list, keeping the list sorted */
+            struct tcp_seg **cur_seg = &(pcb->unacked);
+            while (*cur_seg &&
+              TCP_SEQ_LT(ntohl((*cur_seg)->tcphdr->seqno), ntohl(seg->tcphdr->seqno))) {
+                cur_seg = &((*cur_seg)->next );
+            }
+            seg->next = (*cur_seg);
+            (*cur_seg) = seg;
+          } else {
+            /* add segment to tail of unacked list */
+            useg->next = seg;
+            useg = useg->next;
           }
-          seg->next = (*cur_seg);
-          (*cur_seg) = seg;
-        } else {
-          /* add segment to tail of unacked list */
-          useg->next = seg;
-          useg = useg->next;
         }
       }
     /* do not queue empty segments on the unacked list */
