@@ -1029,9 +1029,7 @@ tcp_receive(struct tcp_pcb *pcb)
         }
 
         pcb->snd_queuelen -= pbuf_clen(next->p);
-        if (next != NULL) {
-          tcp_seg_free(next);
-        }
+        tcp_seg_free(next);
 
         LWIP_DEBUGF(TCP_QLEN_DEBUG, ("%"U16_F" (after freeing unacked)\n", (u16_t)pcb->snd_queuelen));
         if (pcb->snd_queuelen != 0) {
