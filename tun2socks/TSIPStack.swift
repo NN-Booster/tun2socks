@@ -111,6 +111,9 @@ public final class TSIPStack {
     public func received(packet: Data) {
         // Due to the limitation of swift, if we want a zero-copy implemention, we have to change the definition of `pbuf.payload` to `const`, which is not possible.
         // So we have to copy the data anyway.
+        if packet.count == 0 {
+            return
+        }
         let buf = pbuf_alloc(PBUF_RAW, UInt16(packet.count), PBUF_RAM)!
         packet.copyBytes(to: buf.pointee.payload.bindMemory(to: UInt8.self, capacity: packet.count), count: packet.count)
         
